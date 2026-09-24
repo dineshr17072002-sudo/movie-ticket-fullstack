@@ -1,0 +1,19 @@
+# Java / Maven
+target/
+*.class
+
+# IntelliJ
+.idea/
+*.iml
+
+# React / Node
+node_modules/
+build/
+dist/
+
+# Environment files
+.env
+.env.local
+
+# H2 database
+*.mv.db
