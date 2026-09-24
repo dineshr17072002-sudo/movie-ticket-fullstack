@@ -1,0 +1,48 @@
+name: Movie Ticket CD
+
+on:
+  workflow_run:
+    workflows: ["Movie Ticket CI"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Give Maven Wrapper Permission
+        run: chmod +x mvnw
+
+      - name: Build Application
+        run: ./mvnw clean package -DskipTests
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/movie-ticket-backend:latest
+            ghcr.io/${{ github.repository_owner }}/movie-ticket-backend:${{ github.sha }}
